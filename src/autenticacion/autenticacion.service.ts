@@ -12,9 +12,8 @@ export class AutenticacionService {
 
   async create(user: UsuarioDto, path: string) {
     try {
-      // Hash the password before saving
-      const hashedPassword = await bcrypt.hash(user.password, 10);
-      
+
+      const hashedPassword = await bcrypt.hash(user.password, 10);  
       const newUser = new this.userModel({
         ...user,
         password: hashedPassword,
@@ -42,15 +41,13 @@ export class AutenticacionService {
   }
 
   async login(user : LoginDto ): Promise<User> {
-    try {
-      console.log("username: \n\n" , user.username)
-      
+    try {    
       const foundUser = await this.userModel.findOne({ username: user.username });
       
       if (!foundUser) {
         throw new HttpException({
           status: HttpStatus.UNAUTHORIZED,
-          message: 'Usuario o contraseña incorrectos',
+          message: ('No se encontro un usuario asociado con el username: '+ user.username),
         }, HttpStatus.UNAUTHORIZED);
       }
 
@@ -59,7 +56,7 @@ export class AutenticacionService {
       if (!isPasswordValid) {
         throw new HttpException({
           status: HttpStatus.UNAUTHORIZED,
-          message: 'Usuario o contraseña incorrectos',
+          message: 'Contraseña incorrecta',
         }, HttpStatus.UNAUTHORIZED);
       }
 

@@ -12,14 +12,6 @@ export class AutenticacionController {
   @Post('login')
   login(@Body() userDto: LoginDto) {
     try {
-      console.log(userDto)
-      const user : LoginDto = {
-        username : "joaco2",
-        password : "joAco123456"
-      }
-      if (!userDto) {
-        throw new HttpException('Body vacío o inválido', HttpStatus.BAD_REQUEST);
-      } 
       return this.autenticacionService.login(userDto);
     }
     catch (error) {

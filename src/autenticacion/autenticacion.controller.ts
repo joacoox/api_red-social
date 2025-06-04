@@ -17,7 +17,7 @@ export class AutenticacionController {
         username : "joaco2",
         password : "joAco123456"
       }
-      if (userDto) {
+      if (!userDto) {
         throw new HttpException('Body vacío o inválido', HttpStatus.BAD_REQUEST);
       } 
       return this.autenticacionService.login(userDto);

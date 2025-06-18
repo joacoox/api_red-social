@@ -1,26 +1,34 @@
-import { Controller, Post, Body, HttpStatus, Get, UploadedFile, UseInterceptors, HttpException } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, Get, UploadedFile, UseInterceptors, HttpException,Res } from '@nestjs/common';
 import { AutenticacionService } from './autenticacion.service';
 import { UsuarioDto } from './dto/create-autenticacion.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { LoginDto } from './dto/login-autenticacion.dto';
+import { Response } from 'express';
 
 @Controller('autenticacion')
 export class AutenticacionController {
   constructor(private readonly autenticacionService: AutenticacionService) { }
 
   @Post('login')
-  login(@Body() userDto: LoginDto) {
+  async login(@Body() userDto: LoginDto, @Res() response: Response) {
     try {
-      return this.autenticacionService.login(userDto);
+      const body = await this.autenticacionService.login(userDto);
+      response.status(HttpStatus.OK);
+      response.json(body);
     }
     catch (error) {
       console.log(error);
-      return {
+      throw new HttpException({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: error.mensaje || error.message
-      }
+        message: error.message || 'Error interno',
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @Post('registro')
+  create(@Body() usuario: UsuarioDto) {
+    return this.autenticacionService.create(usuario);
   }
 
   @Get('find')
@@ -30,36 +38,10 @@ export class AutenticacionController {
     }
     catch (error) {
       console.log(error);
-      return {
+      throw new HttpException({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: "Error al traer los usuarios de la base de datos"
-      }
+        message: error.message || 'Error interno',
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  }
-
-  @Post('registro')
-  @UseInterceptors(FileInterceptor('image', {
-    storage: diskStorage({
-      destination(req, file, callback) {
-        callback(null, 'public/images');
-      },
-      filename(req, file, callback) {
-        const newName = Date.now() + '-' + file.originalname;
-        callback(null, newName);
-      },
-    }),
-    limits: {
-      fileSize: 20_000,
-    },
-    fileFilter(req, file, callback) {
-      const allowedMime = ['image/jpeg', 'image/png', 'image/gif'];
-      if (!allowedMime.includes(file.mimetype)) {
-        return callback(new Error('Solo se permiten JPEG/PNG/GIF'), false);
-      }
-      callback(null, true);
-    },
-  }))
-  create(@Body() usuario: UsuarioDto, @UploadedFile() image: Express.Multer.File) {
-    return this.autenticacionService.create(usuario, image.originalname)
   }
 }

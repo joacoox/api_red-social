@@ -1,9 +1,10 @@
 export class UsuarioDto {
     username: string;
+    password: string;
     name: string;
     surname: string;
-    dateOfBirth: Date;
-    description: string;
     email: string;
-    password: string;
+    dateOfBirth: string;
+    image: string;
+    description?: string;
 }

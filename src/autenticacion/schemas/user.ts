@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsEmail } from 'class-validator';
 import { ObjectId } from 'mongoose';
+import { ROLES } from 'src/helpers/roles.consts';
 
 @Schema()
 export class User {
 
     _id?: ObjectId;
 
-    @Prop({ required: true, unique: true , minlength: 5, maxlength: 15})
+    @Prop({ required: true, unique: true, minlength: 4, maxlength: 15 })
     username: string;
 
     @Prop({
@@ -18,24 +18,26 @@ export class User {
     })
     password: string;
 
-    @Prop({ required: true, unique: true})
-    @IsEmail()
+    @Prop({ required: true, unique: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ })
     email: string;
 
-    @Prop({ required: true, minlength: 5, maxlength: 15 })
+    @Prop({ required: true, minlength: 3, maxlength: 15 })
     name: string;
 
-    @Prop({ required: true ,minlength: 5, maxlength: 15})
+    @Prop({ required: true, minlength: 3, maxlength: 15 })
     surname: string;
 
     @Prop({ required: true })
     dateOfBirth: Date;
 
-    @Prop({ required: false, maxlength:50})
+    @Prop({ required: false, maxlength: 50 })
     description: string;
 
-    @Prop({ required: false, maxlength:50})
+    @Prop({ required: true, maxlength: 50 })
     image: string;
+
+    @Prop({ required: true, enum: [ROLES.USER, ROLES.ADMIN], default: ROLES.USER })
+    role : string;
 
 }
 

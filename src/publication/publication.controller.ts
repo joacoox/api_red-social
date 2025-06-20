@@ -1,10 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, UseGuards, Query, Req, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, Req, Put } from '@nestjs/common';
 import { PublicationService } from './publication.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { AuthorizedGuard } from 'src/guards/authorized/authorized.guard';
-import { User } from 'src/models/user';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { Publication } from './schema/publication';
 
 
 @Controller('publication')
@@ -60,4 +59,23 @@ export class PublicationController {
     return this.publicationService.unlikePublication(id, req.user._id);
   }
 
+  @Post(':id/comments')
+  @UseGuards(AuthorizedGuard)
+  async commentOnPost(
+    @Param('id') id: string,
+    @Body() createCommentDto: CreateCommentDto,
+    @Req() req: any
+  ): Promise<Publication> {
+    return this.publicationService.addComment(id, createCommentDto, req.user._id);
+  }
+
+  @Put(':id/comments')
+  @UseGuards(AuthorizedGuard)
+  async deleteCommentOnPost(
+    @Param('id') idPost: string,
+    @Body() idComment : string,
+    @Req() req: any
+  ) {
+    return this.publicationService.removeComment(idPost,idComment,req.user._id);
+  }
 }

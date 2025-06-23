@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, Req, Put } from '@nestjs/common';
 import { PublicationService } from './publication.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
-import { AuthorizedGuard } from 'src/guards/authorized/authorized.guard';
+import { AuthorizedGuard } from '../guards/authorized/authorized.guard';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Publication } from './schema/publication';
 

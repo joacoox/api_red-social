@@ -3,9 +3,9 @@ import { PublicationService } from './publication.service';
 import { PublicationController } from './publication.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Publication, PublicationSchema } from './schema/publication';
-import { UserSchema } from 'src/autenticacion/schemas/user';
-import { User } from 'src/models/user';
-import { JwtService } from 'src/servicices/jwt/jwt.service';
+import { UserSchema } from '../autenticacion/schemas/user';
+import { User } from '../models/user';
+import { JwtService } from '../servicices/jwt/jwt.service';
 
 @Module({
   imports: [

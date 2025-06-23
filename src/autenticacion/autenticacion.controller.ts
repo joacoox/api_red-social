@@ -1,8 +1,6 @@
-import { Controller, Post, Body, HttpStatus, Get, UploadedFile, UseInterceptors, HttpException,Res } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, Get, HttpException,Res } from '@nestjs/common';
 import { AutenticacionService } from './autenticacion.service';
 import { UsuarioDto } from './dto/create-autenticacion.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { LoginDto } from './dto/login-autenticacion.dto';
 import { Response } from 'express';
 

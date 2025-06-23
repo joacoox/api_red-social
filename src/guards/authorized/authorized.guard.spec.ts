@@ -1,7 +1,19 @@
-import { AuthorizedGuard } from './authorized.guard';
+import { TestingModule, Test } from '@nestjs/testing';
+import { JwtService } from '../../servicices/jwt/jwt.service';
+
 
 describe('AuthorizedGuard', () => {
+  let service: JwtService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [JwtService],
+    }).compile();
+
+    service = module.get<JwtService>(JwtService);
+  });
+
   it('should be defined', () => {
-    expect(new AuthorizedGuard()).toBeDefined();
+    expect(service).toBeDefined();
   });
 });

@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { Publication } from './schema/publication';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/autenticacion/schemas/user';
-import { ROLES } from 'src/helpers/roles.consts';
+import { ROLES } from '../helpers/roles.consts';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 

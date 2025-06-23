@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ObjectId } from 'mongoose';
-import { ROLES } from 'src/helpers/roles.consts';
+import { ROLES } from '../../helpers/roles.consts';
 
 @Schema()
 export class User {

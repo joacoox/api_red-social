@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsuarioDto } from './dto/create-autenticacion.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -8,11 +8,16 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '../servicices/jwt/jwt.service';
 import { ITokenPayload } from '../models/interfaces/ITokenPayload';
 
+
 @Injectable()
 export class AutenticacionService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>, private jwt : JwtService ) { }
 
-  async create(user: UsuarioDto) : Promise<ITokenPayload> {
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private jwt: JwtService,
+    private readonly jwtService: JwtService) { }
+
+  async create(user: UsuarioDto): Promise<ITokenPayload> {
     try {
       const hashedPassword = await bcrypt.hash(user.password, 10);
       const newUser = new this.userModel({
@@ -20,7 +25,7 @@ export class AutenticacionService {
         password: hashedPassword,
       });
       await newUser.save();
-      
+
       if (!newUser) {
         throw new HttpException({
           status: HttpStatus.BAD_REQUEST,
@@ -59,24 +64,24 @@ export class AutenticacionService {
     }
   }
 
-  async login(user: LoginDto) : Promise<ITokenPayload> {
+  async login(user: LoginDto): Promise<ITokenPayload> {
     try {
       const foundUser = await this.userModel.findOne({ username: user.username });
 
       if (!foundUser) {
         throw new HttpException({
-          status: HttpStatus.UNAUTHORIZED,
+          status: HttpStatus.BAD_REQUEST,
           message: ('No se encontro un usuario asociado con el username: ' + user.username),
-        }, HttpStatus.UNAUTHORIZED);
+        }, HttpStatus.BAD_REQUEST);
       }
 
       const isPasswordValid = await bcrypt.compare(user.password, foundUser.password);
 
       if (!isPasswordValid) {
         throw new HttpException({
-          status: HttpStatus.UNAUTHORIZED,
-          message: 'Contraseña incorrecta',
-        }, HttpStatus.UNAUTHORIZED);
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Credenciales Invalidas',
+        }, HttpStatus.BAD_REQUEST);
       }
 
       return this.jwt.crearToken({
@@ -103,5 +108,33 @@ export class AutenticacionService {
 
   async findAll(): Promise<User[]> {
     return await this.userModel.find() as User[];
+  }
+
+  refrescar(authHeader: string): ITokenPayload {
+
+    if (!authHeader) {
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Token no proporcionado',
+      }, HttpStatus.BAD_REQUEST);
+    }
+
+    const [bearer, token] = authHeader.split(' ');
+
+    if (bearer !== 'Bearer' || !token) {
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Formato de token invalido',
+      }, HttpStatus.BAD_REQUEST);
+    }
+    const refreshedToken = this.jwtService.refrescar(token);
+    if (refreshedToken === null) {
+      throw new HttpException({
+        status: HttpStatus.UNAUTHORIZED,
+        message: 'No se pudo refrescar el token',
+      }, HttpStatus.UNAUTHORIZED);
+    }
+
+    return refreshedToken;
   }
 }

@@ -6,13 +6,15 @@ import { Publication, PublicationSchema } from './schema/publication';
 import { UserSchema } from '../autenticacion/schemas/user';
 import { User } from '../models/user';
 import { JwtService } from '../servicices/jwt/jwt.service';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Publication.name, schema: PublicationSchema },
       { name: User.name, schema: UserSchema }
-    ])
+    ]),
+    CommentsModule
   ],
   controllers: [PublicationController],
   providers: [PublicationService, JwtService],

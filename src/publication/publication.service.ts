@@ -5,8 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from '../autenticacion/schemas/user';
 import { ROLES } from '../helpers/roles.consts';
-import { CreateCommentDto } from './dto/create-comment.dto';
-
+import { UpdatePublicationDto } from './dto/update-publication.dto';
 
 @Injectable()
 export class PublicationService {
@@ -26,24 +25,49 @@ export class PublicationService {
     return publication.save();
   }
 
+  async update(idPost: string, dto: UpdatePublicationDto) {
+    const updated = await this.publicationModel.findByIdAndUpdate(
+      idPost,
+      {
+        ...dto,
+      },
+      { new: true }
+    ).exec();
+
+    if (!updated) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        message: 'Publicación no encontrada',
+      }, HttpStatus.NOT_FOUND);
+    }
+
+    return updated;
+  }
+
   async remove(id: string, user: { id: string }) {
 
     const publication = await this.publicationModel.findById(id);
 
     if (!publication) {
-      throw new NotFoundException('Publication no encontrada');
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        message: 'Publication no encontrada',
+      }, HttpStatus.NOT_FOUND);
     }
     const userDba = await this.userModel.findById(user.id);
 
     if (!userDba) {
-      throw new NotFoundException('Credenciales de usuario no encontradas');
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        message: 'Credenciales de usuario no encontradas',
+      }, HttpStatus.NOT_FOUND);
     }
 
     if (!(publication.userId.toString() === user.id) && !(userDba.role === ROLES.ADMIN)) {
       throw new HttpException({
-        status: HttpStatus.UNAUTHORIZED,
+        status: HttpStatus.BAD_REQUEST,
         message: 'No tenes permisos para eliminar esta publicacion',
-      }, HttpStatus.UNAUTHORIZED);
+      }, HttpStatus.BAD_REQUEST);
     }
 
     publication.filed = true;
@@ -94,18 +118,18 @@ export class PublicationService {
         })
         .populate({
           path: 'comments.userId',
-          select: '-createdAt',
+          select: '-createdAt -password -email',
         })
         .exec(),
       this.publicationModel.countDocuments(filter),
     ]);
 
-    results.forEach((publication: Publication & { comments: { createdAt?: Date }[] }) => {
-      if (publication.comments && Array.isArray(publication.comments)) {
-        publication.comments.sort(
-          (a: { createdAt?: Date }, b: { createdAt?: Date }) =>
-            (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
+    results.forEach((pub) => {
+      if (Array.isArray(pub.comments)) {
+        pub.comments.sort(
+          (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
         );
+        pub.comments = pub.comments.slice(0, 3);
       }
     });
 
@@ -116,6 +140,21 @@ export class PublicationService {
       totalPages: Math.ceil(total / limit),
       results,
     };
+  }
+
+  async findOne(postId: string) {
+    if (postId === null || postId === undefined) {
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'ID no valido',
+      }, HttpStatus.BAD_REQUEST);
+    }
+
+    const response = await this.publicationModel.findById(postId)
+      .select('-comments')
+      .exec();
+
+    return response;
   }
 
   async likePublication(publicationId: string, userId: string) {
@@ -184,82 +223,4 @@ export class PublicationService {
 
     return { message: 'Me gusta eliminado correctamente' };
   }
-
-  async addComment(
-    publicationId: string,
-    dto: CreateCommentDto,
-    id: string
-  ): Promise<Publication> {
-
-    const publication = await this.publicationModel.findById(publicationId);
-    if (!publication) {
-      throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
-        message: 'Publicación no encontrada',
-      }, HttpStatus.NOT_FOUND);
-    }
-    const user = await this.userModel.findById(id);
-    if (!user) {
-      throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
-        message: 'Usuario no encontrado',
-      }, HttpStatus.NOT_FOUND);
-    }
-
-    const comment = {
-      userId: new Types.ObjectId(id),
-      text: dto.text,
-      createdAt: new Date(),
-    };
-    publication.comments.push(comment);
-
-    await publication.save();
-
-    await publication.populate({
-      path: 'comments.userId',
-      select: '-createdAt',
-    });
-    publication.comments.sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
-    return publication;
-  }
-
-  async removeComment(
-    publicationId: string,
-    commentId: string,
-    userId: string,
-  ): Promise<Publication> {
-    const publication = await this.publicationModel.findById(publicationId);
-    if (!publication) {
-      throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
-        message: 'Publicación no encontrada',
-      }, HttpStatus.NOT_FOUND);
-    }
-
-
-    const index = publication.comments.findIndex(
-      c => c.userId.toString() === commentId,
-    );
-    if (index === -1) {
-      throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
-        message: 'Comentario no encontrado',
-      }, HttpStatus.NOT_FOUND);
-    }
-
-    const comment = publication.comments[index];
-    const userDba = await this.userModel.findById(comment.userId);
-
-    if (comment.userId.toString() !== userId || userDba?.role !== ROLES.ADMIN) {
-      throw new HttpException({
-        status: HttpStatus.UNAUTHORIZED,
-        message: 'No tenés permiso para eliminar este comentario',
-      }, HttpStatus.UNAUTHORIZED);
-    }
-
-    publication.comments.splice(index, 1);
-    await publication.save();
-    return publication;
-  }
-
 }

@@ -6,10 +6,11 @@ import { User } from '../../models/user';
 @Injectable()
 export class JwtService {
   crearToken(userData: User): ITokenPayload {
+
     const payload = {
       ...userData,
-      iat: Date.now() / 1000,
-      exp: Date.now() / 1000 + 60 * 60 * 1.5,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 60 * 15,
     };
 
     const token = sign(payload, process.env.JWT_SECRET || 'CL@V3ULTR4S3CRETA', {
@@ -29,7 +30,15 @@ export class JwtService {
         process.env.JWT_SECRET || 'CL@V3ULTR4S3CRETA',
       ) as User;
     } catch (error) {
+      console.log(error)
       return null;
     }
+  }
+
+  refrescar(token: string): ITokenPayload | null {
+    let user = this.leerToken(token);
+    if (user === null) return null;
+    let newToken = this.crearToken(user);
+    return newToken;
   }
 }

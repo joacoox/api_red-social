@@ -2,9 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, Req, Put 
 import { PublicationService } from './publication.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { AuthorizedGuard } from '../guards/authorized/authorized.guard';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { Publication } from './schema/publication';
-
+import { UpdatePublicationDto } from './dto/update-publication.dto';
 
 @Controller('publication')
 export class PublicationController {
@@ -19,8 +17,18 @@ export class PublicationController {
     dto.userId = req.user._id;
     return this.publicationService.create(dto);
   }
+
+  @Put(":id")
   @UseGuards(AuthorizedGuard)
+  async update(
+    @Body() dto: UpdatePublicationDto,
+    @Param('id') idPost: string
+  ) {
+    return this.publicationService.update(idPost ,dto);
+  }
+
   @Delete(':id')
+  @UseGuards(AuthorizedGuard)
   remove(@Param('id') id: string, @Req() req: any) {
     return this.publicationService.remove(id, req.user._id);
   }
@@ -41,6 +49,12 @@ export class PublicationController {
     });
   }
 
+  @Get(':id')
+  @UseGuards(AuthorizedGuard)
+  findOne(@Param('id') id: string,) {
+    return this.publicationService.findOne(id);
+  }
+
   @Post(':id/like')
   @UseGuards(AuthorizedGuard)
   likePublication(
@@ -57,25 +71,5 @@ export class PublicationController {
     @Req() req: any
   ) {
     return this.publicationService.unlikePublication(id, req.user._id);
-  }
-
-  @Post(':id/comments')
-  @UseGuards(AuthorizedGuard)
-  async commentOnPost(
-    @Param('id') id: string,
-    @Body() createCommentDto: CreateCommentDto,
-    @Req() req: any
-  ): Promise<Publication> {
-    return this.publicationService.addComment(id, createCommentDto, req.user._id);
-  }
-
-  @Put(':id/comments')
-  @UseGuards(AuthorizedGuard)
-  async deleteCommentOnPost(
-    @Param('id') idPost: string,
-    @Body() idComment : string,
-    @Req() req: any
-  ) {
-    return this.publicationService.removeComment(idPost,idComment,req.user._id);
   }
 }

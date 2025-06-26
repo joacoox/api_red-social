@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Put, Req, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Put, Req, UseGuards, Get, Query } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -33,8 +33,9 @@ export class CommentsController {
   @UseGuards(AuthorizedGuard)
   async findAllComments(
     @Param('id') id: string,
-    @Req() req: any
+    @Req() req: any,
+    @Query('limit') limit?: string,
   ) {
-    return this.commentsService.findAllComments(id);
+    return this.commentsService.findAllComments(id, Number(limit) || 0);
   }
 }

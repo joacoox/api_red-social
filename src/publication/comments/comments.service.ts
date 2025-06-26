@@ -99,7 +99,8 @@ export class CommentsService {
     return publication;
   }
 
-  async findAllComments(postId: string) {
+  async findAllComments(postId: string, limit: number) {
+
     if (postId === null || postId === undefined) {
       throw new HttpException({
         status: HttpStatus.BAD_REQUEST,
@@ -107,20 +108,32 @@ export class CommentsService {
       }, HttpStatus.BAD_REQUEST);
     }
 
-    const response = await this.publicationModel.findById(postId)
+    const doc = await this.publicationModel
+      .findById(postId)
       .populate({
         path: 'comments.userId',
-        select: '-createdAt -password -email',
+        select: '-createdAt -password -email'
       })
       .exec();
 
-    if (response && Array.isArray(response.comments)) {
-      response.comments.sort(
-        (a: { createdAt?: Date }, b: { createdAt?: Date }) =>
-          (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
-      );
+    if (!doc) {
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Publicacion no encontrada',
+      }, HttpStatus.BAD_REQUEST);
     }
 
-    return response;
+    const comments = Array.isArray(doc.comments)
+      ? 
+      doc.comments.sort((a, b) =>
+        (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
+      )
+      : [];
+
+    const sliced = (typeof limit === 'number' && limit > 0)
+      ? comments.slice(0, limit)
+      : comments;
+
+    return { ...doc.toObject(), comments: sliced };
   }
 }

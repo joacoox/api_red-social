@@ -76,71 +76,63 @@ export class PublicationService {
     return { message: 'Publicacion Archivada' };
   }
 
-  async findAll(query: {
-    sortBy?: 'date' | 'likes';
-    userId?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    const {
-      sortBy = 'date',
-      userId,
-      page = 1,
-      limit = 10,
-    } = query;
+ async findAll(query: {
+  sortBy?: 'date' | 'likes';
+  userId?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const {
+    sortBy = 'date',
+    userId,
+    page = 1,
+    limit = 10,
+  } = query;
 
-    const offset = (page - 1) * limit;
+  const offset = (page - 1) * limit;
 
-    const filter: any = {
-      filed: false
-    };
-
-    if (userId) {
-      filter.userId = userId;
-    }
-
-    const sort: any = {};
-    if (sortBy === 'likes') {
-      sort['likes'] = -1;
-    } else {
-      sort['createdAt'] = -1;
-    }
-
-    const [results, total] = await Promise.all([
-      this.publicationModel
-        .find(filter)
-        .sort(sort)
-        .skip(offset)
-        .limit(limit)
-        .populate({
-          path: 'userId',
-          select: '-password -email',
-        })
-        .populate({
-          path: 'comments.userId',
-          select: '-createdAt -password -email',
-        })
-        .exec(),
-      this.publicationModel.countDocuments(filter),
-    ]);
-
-    results.forEach((pub) => {
-      if (Array.isArray(pub.comments)) {
-        pub.comments.sort(
-          (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
-        );
-        pub.comments = pub.comments.slice(0, 3);
-      }
-    });
-
-    return {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-      results,
-    };
+  const filter: any = { filed: false };
+  if (userId) {
+    filter.userId = userId;
   }
+
+  let results = await this.publicationModel
+    .find(filter)
+    .populate({
+      path: 'userId',
+      select: '-password -email',
+    })
+    .populate({
+      path: 'comments.userId',
+      select: '-createdAt -password -email',
+    })
+    .exec();
+
+  if (sortBy === 'likes') {
+    results.sort((a, b) => (b.likes.length || 0) - (a.likes.length || 0));
+  } else {
+    results.sort((a, b) => (b["createdAt"].getTime() || 0) - (a["createdAt"].getTime() || 0));
+  }
+
+  const paginated = results.slice(offset, offset + limit);
+
+  paginated.forEach(pub => {
+    if (Array.isArray(pub.comments)) {
+      pub.comments.sort(
+        (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
+      );
+      pub.comments = pub.comments.slice(0, 3);
+    }
+  });
+
+  return {
+    total: results.length,
+    page,
+    limit,
+    totalPages: Math.ceil(results.length / limit),
+    results: paginated,
+  };
+}
 
   async findOne(postId: string) {
     if (postId === null || postId === undefined) {

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsuarioDto } from './dto/create-autenticacion.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -81,6 +81,13 @@ export class AutenticacionService {
         throw new HttpException({
           status: HttpStatus.BAD_REQUEST,
           message: 'Credenciales Invalidas',
+        }, HttpStatus.BAD_REQUEST);
+      }
+
+      if( foundUser.filed === true) {
+        throw new HttpException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Usuario inhabilitado contactese con un administrador',
         }, HttpStatus.BAD_REQUEST);
       }
 

@@ -1,22 +1,32 @@
-import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { Request } from 'express';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  ForbiddenException
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ROLES_KEY } from '../../decorators/roles.decorator'
+import { Role } from '../../helpers/roles.consts';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    const profile = request.header('profile');
+    if (!requiredRoles || requiredRoles.length === 0) return true;
 
-    if (profile === 'admin') return true;
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
 
-    throw new HttpException('No es admin', HttpStatus.UNAUTHORIZED, {
-      cause: new Error(),
-      description: 'Que no sos admin',
-    });
+    if (!user || !requiredRoles.includes(user.role)) {
+      throw new ForbiddenException('Acceso denegado. Rol insuficiente.');
+    }
+
+    return true;
   }
 }

@@ -44,17 +44,16 @@ export class PublicationService {
     return updated;
   }
 
-  async remove(id: string, user: { id: string }) {
+  async remove(idPost: string, userId: string ) {
 
-    const publication = await this.publicationModel.findById(id);
-
+    const publication = await this.publicationModel.findById(idPost);
     if (!publication) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
         message: 'Publication no encontrada',
       }, HttpStatus.NOT_FOUND);
     }
-    const userDba = await this.userModel.findById(user.id);
+    const userDba = await this.userModel.findById(userId);
 
     if (!userDba) {
       throw new HttpException({
@@ -63,7 +62,7 @@ export class PublicationService {
       }, HttpStatus.NOT_FOUND);
     }
 
-    if (!(publication.userId.toString() === user.id) && !(userDba.role === ROLES.ADMIN)) {
+    if (!(publication.userId.toString() === userId) && !(userDba.role === ROLES.ADMIN)) {
       throw new HttpException({
         status: HttpStatus.BAD_REQUEST,
         message: 'No tenes permisos para eliminar esta publicacion',

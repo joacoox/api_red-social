@@ -1,34 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { ROLES } from '../helpers/roles.consts';
+import { AuthorizedGuard } from '../guards/authorized/authorized.guard';
+import { Roles } from '../decorators/roles.decorator';
+import { RolesGuard } from '../guards/roles/roles.guard';
 import { UsuariosService } from './usuarios.service';
-import { CreateUsuarioDto } from './dto/create-usuario.dto';
-import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { CreateUserDto } from './dto/create-usuario.dto';
 
 @Controller('usuarios')
+@UseGuards(AuthorizedGuard, RolesGuard)
+@Roles(ROLES.ADMIN)
 export class UsuariosController {
-  constructor(private readonly usuariosService: UsuariosService) {}
-
-  @Post()
-  create(@Body() createUsuarioDto: CreateUsuarioDto) {
-    return this.usuariosService.create(createUsuarioDto);
-  }
+  constructor(private readonly usersService: UsuariosService) {}
 
   @Get()
   findAll() {
-    return this.usuariosService.findAll();
+    return this.usersService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usuariosService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
-    return this.usuariosService.update(+id, updateUsuarioDto);
+  @Post()
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.create(dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usuariosService.remove(+id);
+  disable(@Param('id') id: string) {
+    return this.usersService.disable(id);
+  }
+
+  @Post(':id/enable')
+  enable(@Param('id') id: string) {
+    return this.usersService.enable(id);
   }
 }

@@ -14,8 +14,7 @@ export class AutenticacionService {
 
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
-    private jwt: JwtService,
-    private readonly jwtService: JwtService) { }
+    private jwt: JwtService) { }
 
   async create(user: UsuarioDto): Promise<ITokenPayload> {
     try {
@@ -134,7 +133,7 @@ export class AutenticacionService {
         message: 'Formato de token invalido',
       }, HttpStatus.BAD_REQUEST);
     }
-    const refreshedToken = this.jwtService.refrescar(token);
+    const refreshedToken = this.jwt.refrescar(token);
     if (refreshedToken === null) {
       throw new HttpException({
         status: HttpStatus.UNAUTHORIZED,

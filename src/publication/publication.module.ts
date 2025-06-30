@@ -7,6 +7,8 @@ import { UserSchema } from '../autenticacion/schemas/user';
 import { User } from '../models/user';
 import { JwtService } from '../servicices/jwt/jwt.service';
 import { CommentsModule } from './comments/comments.module';
+import { EstadisticasController } from './estadisticas.controller';
+import { EstadisticasService } from './estadisticas.service';
 
 @Module({
   imports: [
@@ -16,7 +18,7 @@ import { CommentsModule } from './comments/comments.module';
     ]),
     CommentsModule
   ],
-  controllers: [PublicationController],
-  providers: [PublicationService, JwtService],
+  controllers: [PublicationController, EstadisticasController],
+  providers: [PublicationService, JwtService, EstadisticasService],
 })
 export class PublicationModule { }

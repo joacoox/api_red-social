@@ -9,4 +9,5 @@ export class User {
   image: string;
   role : string;
   password?: string;
+  filed ?: boolean;
 }
